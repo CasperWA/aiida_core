@@ -11,4 +11,6 @@
 
 /venv*/
 /.idea/
-/aiida.egg-info/
+/aiida_core.egg-info/
+
+.vscode/
