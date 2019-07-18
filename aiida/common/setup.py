@@ -15,7 +15,7 @@ __authors__ = "The AiiDA team."
 
 DEFAULT_AIIDA_USER = "aiida@localhost"
 
-AIIDA_CONFIG_FOLDER = "~/.aiida"
+AIIDA_CONFIG_FOLDER = "~/virtualenv/sssp_py2/aiida/.aiida"
 CONFIG_FNAME = 'config.json'
 SECRET_KEY_FNAME = 'secret_key.dat'
 
