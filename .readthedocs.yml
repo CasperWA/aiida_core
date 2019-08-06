@@ -1,5 +1,10 @@
 # Configuration for readthedocs
 
+# New parameters for Read The Docs v2
+# See also https://docs.readthedocs.io/en/stable/config-file/index.html
+
+version: 2
+
 # Important: we need to disable all unneeded formats.
 # Note that HTML and JSON are always built:
 # https://docs.readthedocs.io/en/latest/yaml-config.html#formats
@@ -8,7 +13,24 @@
 # https://github.com/aiidateam/aiida-core/issues/1472
 formats: []
 
-## For now I don't specify any other parameter, that is
-## currently setup in the web page of Read the Docs.
-## For other parameters see
-## https://docs.readthedocs.io/en/latest/yaml-config.html
+build:
+  image: stable
+
+python:
+    version: 3.6
+    install:
+      - requirements: docs/requirements_for_rtd.txt
+      - method: pip
+        path: .
+        extra_requirements: []
+    system_packages: false
+
+## The conda environment can be heavy on the build,
+## and is not essential for the documentation environment
+# conda:
+#   environment: environment.yml
+
+sphinx:
+  builder: html
+  configuration: docs/conf.py
+  fail_on_warning: false
