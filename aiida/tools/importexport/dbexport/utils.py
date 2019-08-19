@@ -336,7 +336,7 @@ def _retrieve_linked_nodes_query(current_node, input_type, output_type, directio
     return links_uuid_dict, found_nodes
 
 
-def retrieve_linked_nodes(process_nodes, data_nodes, **kwargs):  # pylint: disable=too-many-statements
+def retrieve_linked_nodes(process_nodes, data_nodes, silent=False, **kwargs):  # pylint: disable=too-many-statements
     """Recursively retrieve linked Nodes and the links
 
     The rules for recursively following links/edges in the provenance graph are as follows,
@@ -374,6 +374,8 @@ def retrieve_linked_nodes(process_nodes, data_nodes, **kwargs):  # pylint: disab
     :param process_nodes: Set of :py:class:`~aiida.orm.nodes.process.process.ProcessNode` node PKs.
     :param data_nodes: Set of :py:class:`~aiida.orm.nodes.data.data.Data` node PKs.
 
+    :param silent: Suppress prints.
+
     :param input_calc_forward: Follow INPUT_CALC links in the forward direction (recursively).
     :param create_backward: Follow CREATE links in the backward direction (recursively).
     :param return_backward: Follow RETURN links in the backward direction (recursively).
@@ -393,6 +395,8 @@ def retrieve_linked_nodes(process_nodes, data_nodes, **kwargs):  # pylint: disab
     links_uuid_dict = {}
     traversal_rules = {}
 
+    progress_bar = kwargs.pop('progress_bar', None)
+
     # Create the dictionary with graph traversal rules to be used in determing complete node set to be exported
     for name, rule in GraphTraversalRules.EXPORT.value.items():
 
@@ -403,18 +407,36 @@ def retrieve_linked_nodes(process_nodes, data_nodes, **kwargs):  # pylint: disab
         # Use the rule value passed in the keyword arguments, or if not the case, use the default
         traversal_rules[name] = kwargs.pop(name, rule.default)
 
+    if not silent:
+        if progress_bar is not None:
+            # Retrieving linked Nodes
+            number_of_org_nodes = len(process_nodes) + len(data_nodes)
+            if number_of_org_nodes:
+                progress_bar.reset(total=number_of_org_nodes)
+            pbar_base_str = 'Retrieving linked Nodes - '
+        else:
+            raise exceptions.ExportValidationError('progress_bar not provided while not silent')
+
     # We repeat until there are no further nodes to be visited
     while process_nodes or data_nodes:
 
         # If is is a ProcessNode
         if process_nodes:
             current_node_pk = process_nodes.pop()
+
+            if not silent:
+                progress_bar.update()
+
             # If it is already visited continue to the next node
             if current_node_pk in retrieved_nodes:
                 continue
+
             # Otherwise say that it is a node to be exported
-            else:
-                retrieved_nodes.add(current_node_pk)
+            retrieved_nodes.add(current_node_pk)
+
+            if not silent:
+                # Progress bar - Linked to ProcessNodes
+                progress_bar.set_description_str(pbar_base_str + 'PK={}'.format(current_node_pk))
 
             # INPUT_CALC(Data, CalculationNode) - Backward
             if traversal_rules['input_calc_backward']:
@@ -515,12 +537,20 @@ def retrieve_linked_nodes(process_nodes, data_nodes, **kwargs):  # pylint: disab
         # If it is a Data
         else:
             current_node_pk = data_nodes.pop()
+
+            if not silent:
+                progress_bar.update()
+
             # If it is already visited continue to the next node
             if current_node_pk in retrieved_nodes:
                 continue
+
             # Otherwise say that it is a node to be exported
-            else:
-                retrieved_nodes.add(current_node_pk)
+            retrieved_nodes.add(current_node_pk)
+
+            if not silent:
+                # Progress bar - Linked to Data nodes
+                progress_bar.set_description_str(pbar_base_str + 'PK={}'.format(current_node_pk))
 
             # INPUT_CALC(Data, CalculationNode) - Forward
             if traversal_rules['input_calc_forward']:
@@ -569,5 +599,9 @@ def retrieve_linked_nodes(process_nodes, data_nodes, **kwargs):  # pylint: disab
                 )
                 process_nodes.update(found_nodes - retrieved_nodes)
                 links_uuid_dict.update(links_uuids)
+
+        if not silent:
+            # Update total (if there are new additions)
+            progress_bar.total = len(process_nodes) + len(data_nodes) + progress_bar.n
 
     return retrieved_nodes, list(links_uuid_dict.values()), traversal_rules
