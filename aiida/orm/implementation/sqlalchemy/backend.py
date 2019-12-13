@@ -35,7 +35,8 @@ class SqlaBackend(SqlBackend[base.Base]):
 
     def __init__(self, session=None):
         """Construct the backend instance by initializing all the collections."""
-        self.__active_session = None
+        self._active_session = session() if session else None
+        print(f"Passed session: {self._active_session}")
         self._session_cls = session if session else get_scoped_session
         self._authinfos = authinfos.SqlaAuthInfoCollection(self)
         self._comments = comments.SqlaCommentCollection(self)
@@ -158,9 +159,9 @@ class SqlaBackend(SqlBackend[base.Base]):
 
         :return: a SQLA session
         """
-        if self.__active_session is None:
-            self.__active_session = self._session_cls()
-        return self.__active_session
+        if self._active_session is None:
+            return self._session_cls()
+        return self._active_session
 
     def close_session(self):
         """Close session
@@ -168,5 +169,5 @@ class SqlaBackend(SqlBackend[base.Base]):
         Close the initialized session.
         NB! ONLY use this, if you passed a session upon initialization of this backend
         """
-        if self.__active_session:
-            self.__active_session.close()
+        if self._active_session is not None:
+            self._active_session.close()

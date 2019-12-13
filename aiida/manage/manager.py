@@ -49,7 +49,7 @@ class Manager:
         manager.reset_backend_environment()
         self._backend = None
 
-    def _load_backend(self, schema_check=True):
+    def _load_backend(self, schema_check=True, session=None):
         """Load the backend for the currently configured profile and return it.
 
         .. note:: this will reconstruct the `Backend` instance in `self._backend` so the preferred method to load the
@@ -86,9 +86,11 @@ class Manager:
         if backend_type == BACKEND_DJANGO:
             from aiida.orm.implementation.django.backend import DjangoBackend
             self._backend = DjangoBackend()
+            # self._backend = DjangoBackend(session=session)
         elif backend_type == BACKEND_SQLA:
             from aiida.orm.implementation.sqlalchemy.backend import SqlaBackend
-            self._backend = SqlaBackend()
+            print(f"Loading SQLA backend from _load_backend, session: {session}")
+            self._backend = SqlaBackend(session=session)
 
         # Reconfigure the logging with `with_orm=True` to make sure that profile specific logging configuration options
         # are taken into account and the `DbLogHandler` is configured.
@@ -119,14 +121,14 @@ class Manager:
 
         return self._backend_manager
 
-    def get_backend(self):
+    def get_backend(self, session=None):
         """Return the database backend
 
         :return: the database backend
         :rtype: :class:`aiida.orm.implementation.Backend`
         """
         if self._backend is None:
-            self._load_backend()
+            self._load_backend(session=session)
 
         return self._backend
 

@@ -72,6 +72,7 @@ def reset_session(profile=None):
         port=profile.database_port,
         name=profile.database_name
     )
+    print("Resetting session from aiida.backends.sqlalchemy")
 
     ENGINE = create_engine(engine_url, json_serializer=json.dumps, json_deserializer=json.loads, encoding='utf-8')
     SCOPED_SESSION_CLASS = scoped_session(sessionmaker(bind=ENGINE, expire_on_commit=True))
