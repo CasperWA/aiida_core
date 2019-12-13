@@ -33,8 +33,10 @@ __all__ = ('SqlaBackend',)
 class SqlaBackend(SqlBackend[base.Base]):
     """SqlAlchemy implementation of `aiida.orm.implementation.backends.Backend`."""
 
-    def __init__(self):
+    def __init__(self, session=None):
         """Construct the backend instance by initializing all the collections."""
+        self.__active_session = None
+        self._session_cls = session if session else get_scoped_session
         self._authinfos = authinfos.SqlaAuthInfoCollection(self)
         self._comments = comments.SqlaCommentCollection(self)
         self._computers = computers.SqlaComputerCollection(self)
@@ -147,3 +149,24 @@ class SqlaBackend(SqlBackend[base.Base]):
         """
         from aiida.backends import sqlalchemy as sa
         return sa.ENGINE.raw_connection()
+
+    def get_session(self):
+        """Get the session
+
+        Depending on the initialization,
+        return either a provided session or a :py:func:`aiida.backends.sqlalchemy.get_scoped_session()`
+
+        :return: a SQLA session
+        """
+        if self.__active_session is None:
+            self.__active_session = self._session_cls()
+        return self.__active_session
+
+    def close_session(self):
+        """Close session
+
+        Close the initialized session.
+        NB! ONLY use this, if you passed a session upon initialization of this backend
+        """
+        if self.__active_session:
+            self.__active_session.close()

@@ -19,7 +19,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql.expression import case, FunctionElement
 from sqlalchemy.ext.compiler import compiles
 
-import aiida.backends.sqlalchemy
+# import aiida.backends.sqlalchemy
 from aiida.common.exceptions import InputValidationError
 from aiida.common.exceptions import NotExistent
 from aiida.orm.implementation.querybuilder import BackendQueryBuilder
@@ -127,7 +127,8 @@ class SqlaQueryBuilder(BackendQueryBuilder):
         return aiida.backends.sqlalchemy.models.group.table_groups_nodes
 
     def get_session(self):
-        return aiida.backends.sqlalchemy.get_scoped_session()
+        return self._backend.get_session()
+        # return aiida.backends.sqlalchemy.get_scoped_session()
 
     def modify_expansions(self, alias, expansions):
         """
