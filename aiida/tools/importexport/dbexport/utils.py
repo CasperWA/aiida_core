@@ -436,7 +436,7 @@ def retrieve_linked_nodes(process_nodes, data_nodes, silent=False, **kwargs):  #
 
             if not silent:
                 # Progress bar - Linked to ProcessNodes
-                progress_bar.set_description_str(pbar_base_str + 'PK={}'.format(current_node_pk))
+                progress_bar.set_description_str(pbar_base_str + 'PK={}'.format(current_node_pk), refresh=False)
 
             # INPUT_CALC(Data, CalculationNode) - Backward
             if traversal_rules['input_calc_backward']:
