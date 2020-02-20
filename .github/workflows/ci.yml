@@ -101,8 +101,8 @@ jobs:
         postgresql version: '10'
         postgresql db: test_${{ matrix.backend }}
         postgresql user: postgres
-        postgresql password: ''
-        postgresql auth: trust
+        postgresql password: test
+        postgresql auth: password
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
